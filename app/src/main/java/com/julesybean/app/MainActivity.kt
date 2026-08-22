@@ -11,6 +11,7 @@ import android.view.GestureDetector
 import android.view.MotionEvent
 import android.webkit.ValueCallback
 import android.webkit.WebChromeClient
+import android.webkit.WebResourceRequest
 import android.webkit.WebView
 import android.webkit.WebViewClient
 import androidx.activity.OnBackPressedCallback
@@ -89,6 +90,20 @@ class MainActivity : AppCompatActivity() {
                 injectDarkModeScript(view)
                 // Enable back button overriding once the page loads and we're inside the SPA
                 backPressedCallback.isEnabled = true
+            }
+
+            override fun shouldOverrideUrlLoading(
+                view: WebView?,
+                request: WebResourceRequest?
+            ): Boolean {
+                val uri = request?.url
+                val host = uri?.host
+                if (host != null && host != "jules.google.com" && !host.endsWith(".jules.google.com")) {
+                    val intent = Intent(Intent.ACTION_VIEW, uri)
+                    startActivity(intent)
+                    return true
+                }
+                return false
             }
         }
 
