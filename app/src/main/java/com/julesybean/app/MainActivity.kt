@@ -202,6 +202,8 @@ class MainActivity : AppCompatActivity() {
             var urlToLoad = data.toString()
             if (data.scheme == "http") {
                 urlToLoad = urlToLoad.replaceFirst("http://", "https://")
+            } else if (data.scheme == "julesybean") {
+                urlToLoad = urlToLoad.replaceFirst("julesybean://", "https://")
             }
             lastValidInternalUrl = urlToLoad
             webView.loadUrl(urlToLoad)

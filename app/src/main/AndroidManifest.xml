@@ -31,6 +31,7 @@
                 <category android:name="android.intent.category.BROWSABLE" />
                 <data android:scheme="http" />
                 <data android:scheme="https" />
+                <data android:scheme="julesybean" />
                 <data android:host="jules.google.com" />
             </intent-filter>
             <intent-filter android:autoVerify="true">
@@ -39,6 +40,7 @@
                 <category android:name="android.intent.category.BROWSABLE" />
                 <data android:scheme="http" />
                 <data android:scheme="https" />
+                <data android:scheme="julesybean" />
                 <data android:host="*.jules.google.com" />
             </intent-filter>
         </activity>
