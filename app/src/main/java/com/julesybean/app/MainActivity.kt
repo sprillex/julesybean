@@ -182,9 +182,34 @@ class MainActivity : AppCompatActivity() {
         setupSwipeGesture()
         setupBackButtonHandling()
 
-        val lastUrl = sharedPreferences.getString(KEY_LAST_URL, "https://jules.google.com")
-        lastValidInternalUrl = lastUrl
-        webView.loadUrl(lastUrl ?: "https://jules.google.com")
+        if (!handleIntent(intent)) {
+            val lastUrl = sharedPreferences.getString(KEY_LAST_URL, "https://jules.google.com")
+            lastValidInternalUrl = lastUrl
+            webView.loadUrl(lastUrl ?: "https://jules.google.com")
+        }
+    }
+
+    override fun onNewIntent(intent: Intent?) {
+        super.onNewIntent(intent)
+        setIntent(intent)
+        handleIntent(intent)
+    }
+
+    private fun handleIntent(intent: Intent?): Boolean {
+        val data: Uri? = intent?.data
+        val host = data?.host
+        if (data != null && (host == "jules.google.com" || host?.endsWith(".jules.google.com") == true)) {
+            var urlToLoad = data.toString()
+            if (data.scheme == "http") {
+                urlToLoad = urlToLoad.replaceFirst("http://", "https://")
+            } else if (data.scheme == "julesybean") {
+                urlToLoad = urlToLoad.replaceFirst("julesybean://", "https://")
+            }
+            lastValidInternalUrl = urlToLoad
+            webView.loadUrl(urlToLoad)
+            return true
+        }
+        return false
     }
 
     override fun onPause() {
