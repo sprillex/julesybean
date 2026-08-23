@@ -24,9 +24,16 @@ import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 
+import android.content.Context
+import android.content.SharedPreferences
+
 class MainActivity : AppCompatActivity() {
 
     private lateinit var webView: WebView
+    private lateinit var sharedPreferences: SharedPreferences
+    private val PREFS_NAME = "JulesybeanPrefs"
+    private val KEY_LAST_URL = "last_url"
+    private var lastValidInternalUrl: String? = null
     private lateinit var gestureDetector: GestureDetector
     private lateinit var backPressedCallback: OnBackPressedCallback
 
@@ -74,6 +81,8 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
+        sharedPreferences = getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+
         webView = findViewById(R.id.webView)
 
         webView.settings.apply {
@@ -84,6 +93,17 @@ class MainActivity : AppCompatActivity() {
         }
 
         webView.webViewClient = object : WebViewClient() {
+            override fun doUpdateVisitedHistory(view: WebView?, url: String?, isReload: Boolean) {
+                super.doUpdateVisitedHistory(view, url, isReload)
+                if (url != null) {
+                    val uri = Uri.parse(url)
+                    val host = uri.host
+                    if (host == "jules.google.com" || host?.endsWith(".jules.google.com") == true) {
+                        lastValidInternalUrl = url
+                    }
+                }
+            }
+
             override fun onPageFinished(view: WebView, url: String) {
                 super.onPageFinished(view, url)
                 injectMobileFriendlyScript(view)
@@ -162,7 +182,20 @@ class MainActivity : AppCompatActivity() {
         setupSwipeGesture()
         setupBackButtonHandling()
 
-        webView.loadUrl("https://jules.google.com")
+        val lastUrl = sharedPreferences.getString(KEY_LAST_URL, "https://jules.google.com")
+        lastValidInternalUrl = lastUrl
+        webView.loadUrl(lastUrl ?: "https://jules.google.com")
+    }
+
+    override fun onPause() {
+        super.onPause()
+        saveCurrentInternalUrl()
+    }
+
+    private fun saveCurrentInternalUrl() {
+        if (lastValidInternalUrl != null) {
+            sharedPreferences.edit().putString(KEY_LAST_URL, lastValidInternalUrl).apply()
+        }
     }
 
     @Throws(IOException::class)
