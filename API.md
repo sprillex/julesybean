@@ -12,15 +12,15 @@ This document defines the interface contracts, deep linking schemes, intent hand
 * **Application ID**: `com.julesybean.app`
 * **Target Android Version**: SDK 34 (Android 14) / Min SDK 24 (Android 7.0)
 
-Julesybean operates as a native Android container wrapping `https://jules.google.com`. Interfaces in this repository consist of Android Intent filters, scheme rewriting contracts, WebView client/chrome hooks, DOM injection bridges, and local key-value storage contracts.
+Julesybean operates as a native Android container wrapping `https://jules.google.com` using Mozilla GeckoView. Interfaces in this repository consist of Android Intent filters, scheme rewriting contracts, GeckoView session/delegate interfaces (`NavigationDelegate`, `ContentDelegate`, `PermissionDelegate`, `PromptDelegate`, `WebNotificationDelegate`), DOM injection bridges, and local key-value storage contracts.
 
 ---
 
 ## Authentication & Security
 
 ### Web Session Authentication
-* **Scheme**: Standard web cookie / token-based session managed within the WebView container by `https://jules.google.com`.
-* **Cookie Persistence**: Managed by `android.webkit.WebView` with DOM storage enabled (`domStorageEnabled = true`).
+* **Scheme**: Standard web cookie / token-based session managed within the GeckoSession container by `https://jules.google.com`.
+* **Push Notifications**: Configured via `GeckoRuntimeSettings.webPush(true)` and `WebNotificationDelegate`. Desktop notification permissions for `*.jules.google.com` are automatically granted via `PermissionDelegate`.
 
 ### Security Boundaries & Open Redirect Prevention
 * **Host Filtering**: All incoming Intent URIs and WebView navigation requests are strictly validated against `jules.google.com` and `*.jules.google.com`.
@@ -153,11 +153,11 @@ Persists and restores the last visited valid internal URL across application res
 
 ---
 
-### 3. WebView Navigation & Interception Interface (`WebViewClient`)
+### 3. GeckoSession Navigation Interface (`GeckoSession.NavigationDelegate`)
 
 Guards internal web navigation and routes external links out of the application.
 
-* **Handler Method**: `WebViewClient.shouldOverrideUrlLoading`
+* **Handler Method**: `NavigationDelegate.onLoadRequest`
 
 #### Interception Logic Matrix
 
@@ -170,11 +170,11 @@ Guards internal web navigation and routes external links out of the application.
 
 ---
 
-### 4. File Chooser & Camera Bridge Interface (`WebChromeClient`)
+### 4. File Chooser & Camera Bridge Interface (`GeckoSession.PromptDelegate`)
 
 Bridges web `<input type="file">` controls to native Android photo capture and file picking intents.
 
-* **Handler Method**: `WebChromeClient.onShowFileChooser`
+* **Handler Method**: `PromptDelegate.onFilePrompt`
 * **FileProvider Authority**: `com.julesybean.app.fileprovider`
 * **Storage Path**: `Pictures/` (mapped via `res/xml/file_paths.xml`)
 
@@ -212,7 +212,7 @@ Injected into the WebView page during `onPageFinished` to optimize web UI respon
 #### DOM Injection Endpoints
 
 ##### A. Mobile Layout Script (`injectMobileFriendlyScript`)
-* **Trigger**: `WebViewClient.onPageFinished`
+* **Trigger**: `GeckoSession.ContentDelegate.onPageStop`
 * **Action**: Injects a `<style>` block into `document.head`.
 * **Injected Styling Specifications**:
   * Enforces base font size: `16px !important`
@@ -221,7 +221,7 @@ Injected into the WebView page during `onPageFinished` to optimize web UI respon
   * Chat container width: `width: 100% !important; max-width: 100% !important; margin: 0 !important; padding: 10px !important;` on `$CSS_SELECTOR_CHAT_CONTAINER`
 
 ##### B. Dark Mode Synchronization (`injectDarkModeScript`)
-* **Trigger**: `WebViewClient.onPageFinished`
+* **Trigger**: `GeckoSession.ContentDelegate.onPageStop`
 * **Detection**: Evaluates system `Configuration.UI_MODE_NIGHT_MASK`.
 * **Script Action**:
   * Dark mode active: Adds `dark` class to `document.documentElement` and sets `data-theme="dark"`.

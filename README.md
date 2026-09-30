@@ -1,8 +1,10 @@
 # julesybean
 
-Julesybean is an Android application that serves as a mobile-optimized WebView wrapper for `https://jules.google.com`. It delivers a native Android experience by injecting responsive CSS styling, synchronizing device dark mode, intercepting system deep links, and providing native file upload and gesture navigation.
+Julesybean is an Android application powered by Mozilla GeckoView (Firefox Engine) that serves as a mobile-optimized wrapper for `https://jules.google.com`. It delivers a native Android experience with support for web push notifications, responsive CSS styling injection, native dark mode synchronization, system deep links, and native file uploads.
 
 ## Features
+
+* **GeckoView Engine & Web Push**: Powered by Mozilla GeckoView with `GeckoRuntimeSettings.webPush(true)`, `WebNotificationDelegate`, and `PermissionDelegate` configured to enable native web push notification delivery for `*.jules.google.com`.
 
 * **Deep Link Handling & Security**: Intercepts `http://`, `https://`, and `julesybean://` links for `jules.google.com` (and its subdomains) and securely rewrites non-HTTPS schemes to `https://`.
 * **Persistent Session & URL Navigation**: Saves the last visited internal URL in `SharedPreferences` upon app pause or closure and restores it on relaunch.
@@ -10,7 +12,7 @@ Julesybean is an Android application that serves as a mobile-optimized WebView w
 * **Native Dark Mode Synchronization**: Automatically detects the system's night mode setting and injects themes (`data-theme="dark"` or `"light"`) to keep the web view in sync with device appearance.
 * **Gesture Navigation**: Allows users to swipe right across the web view to trigger the main web navigation menu.
 * **Smart Back Button Handling**: Single-tapping the back button scrolls to the bottom of the active chat window, while double-tapping within two seconds exits the app.
-* **Native File & Camera Uploads**: Intercepts web file inputs using `WebChromeClient` and integrates Android `FileProvider` with image capture intents to support direct camera photos and local file uploads.
+* **Native File & Camera Uploads**: Intercepts web file inputs using GeckoSession `PromptDelegate` and integrates Android `FileProvider` with image capture intents to support direct camera photos and local file uploads.
 
 ## Tech Stack & Architecture
 
@@ -18,6 +20,7 @@ Julesybean is an Android application that serves as a mobile-optimized WebView w
 * **Platform**: Android SDK 34 (Target: Android 14 / Min SDK: Android 7.0 - API 24)
 * **Build System**: Gradle 8.3 with Kotlin DSL (`build.gradle.kts`)
 * **Core Libraries**:
+  * `org.mozilla.geckoview:geckoview`: Firefox rendering engine for Android
   * `androidx.core:core-ktx`: Kotlin extensions for Android framework APIs
   * `androidx.appcompat:appcompat`: Compatibility support for modern Android UI components
   * `com.google.android.material:material`: Material Design UI components
