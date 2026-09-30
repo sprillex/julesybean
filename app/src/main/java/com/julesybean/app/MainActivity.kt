@@ -22,6 +22,8 @@ import org.mozilla.geckoview.GeckoSession
 import org.mozilla.geckoview.GeckoView
 import org.mozilla.geckoview.WebNotification
 import org.mozilla.geckoview.WebNotificationDelegate
+import org.mozilla.geckoview.WebPushDelegate
+import org.mozilla.geckoview.WebPushSubscription
 import java.io.File
 import java.io.IOException
 import java.text.SimpleDateFormat
@@ -40,50 +42,52 @@ class MainActivity : AppCompatActivity() {
     private lateinit var backPressedCallback: OnBackPressedCallback
 
     // For file uploads
-    private var promptFileCallback: GeckoResult<GeckoSession.PromptDelegate.FilePrompt.Result>? = null
+    private var pendingFilePrompt: GeckoSession.PromptDelegate.FilePrompt? = null
+    private var promptResultCallback: GeckoResult<GeckoSession.PromptDelegate.PromptResponse>? = null
     private var currentPhotoPath: String? = null
 
     private val fileChooserLauncher = registerForActivityResult(
         ActivityResultContracts.StartActivityForResult()
     ) { result ->
-        if (promptFileCallback == null) return@registerForActivityResult
+        val prompt = pendingFilePrompt
+        val callback = promptResultCallback
 
-        var chosenUri: Uri? = null
-        if (result.resultCode == RESULT_OK) {
-            val dataString = result.data?.dataString
-            if (dataString != null) {
-                chosenUri = Uri.parse(dataString)
-            } else if (currentPhotoPath != null) {
-                chosenUri = Uri.parse("file:" + currentPhotoPath)
-            }
-        } else {
-            // User cancelled, cleanup the empty file created for camera if any
-            if (currentPhotoPath != null) {
-                val file = File(currentPhotoPath!!)
-                if (file.exists()) {
-                    file.delete()
+        if (prompt != null && callback != null) {
+            var chosenUri: Uri? = null
+            if (result.resultCode == RESULT_OK) {
+                val dataString = result.data?.dataString
+                if (dataString != null) {
+                    chosenUri = Uri.parse(dataString)
+                } else if (currentPhotoPath != null) {
+                    chosenUri = Uri.parse("file:" + currentPhotoPath)
+                }
+            } else {
+                // User cancelled, cleanup empty file if created
+                if (currentPhotoPath != null) {
+                    val file = File(currentPhotoPath!!)
+                    if (file.exists()) {
+                        file.delete()
+                    }
                 }
             }
+
+            if (chosenUri != null) {
+                callback.complete(prompt.confirm(this, chosenUri))
+            } else {
+                callback.complete(prompt.dismiss())
+            }
         }
 
-        if (chosenUri != null) {
-            promptFileCallback?.complete(
-                GeckoSession.PromptDelegate.FilePrompt.Result.fromUris(this, arrayOf(chosenUri))
-            )
-        } else {
-            promptFileCallback?.complete(null)
-        }
-
-        promptFileCallback = null
+        pendingFilePrompt = null
+        promptResultCallback = null
         currentPhotoPath = null
     }
 
-    // --- Configuration Selectors (Easily tweakable) ---
+    // --- Configuration Selectors ---
     private val CSS_SELECTOR_CHAT_CONTAINER = "main"
     private val CSS_SELECTOR_CODE_PANEL = "aside, .code-panel, [role='complementary']"
     private val CSS_SELECTOR_NAV_MENU = "button[aria-label='Main menu'], button[aria-label='Menu']"
     private val CSS_SELECTOR_CHAT_SCROLL = "main, .chat-container"
-    // ----------------------------------------------------
 
     companion object {
         private var runtime: GeckoRuntime? = null
@@ -99,24 +103,36 @@ class MainActivity : AppCompatActivity() {
         geckoView = findViewById(R.id.geckoView)
 
         if (runtime == null) {
-            val runtimeSettings = GeckoRuntimeSettings.Builder()
-                .webPush(true)
+            val settings = GeckoRuntimeSettings.Builder()
+                .javaScriptEnabled(true)
                 .build()
-            runtime = GeckoRuntime.create(this, runtimeSettings)
+            runtime = GeckoRuntime.create(this, settings)
         }
 
-        geckoSession = GeckoSession()
+        // Enable Web Push Controller & Notification Delegate
+        runtime?.webPushController?.delegate = object : WebPushDelegate {
+            override fun onSubscribe(scope: String, appServerKey: ByteArray?): GeckoResult<WebPushSubscription> {
+                return GeckoResult.fromValue(null)
+            }
 
-        // Enable Web Push and Notifications Delegate
+            override fun onGetSubscription(scope: String): GeckoResult<WebPushSubscription> {
+                return GeckoResult.fromValue(null)
+            }
+
+            override fun onUnsubscribe(scope: String): GeckoResult<Void> {
+                return GeckoResult.fromValue(null)
+            }
+        }
+
         runtime?.webNotificationDelegate = object : WebNotificationDelegate {
             override fun onShowNotification(notification: WebNotification) {
-                // Standard notification handling / display logic
                 notification.click()
             }
 
             override fun onCloseNotification(notification: WebNotification) {}
         }
 
+        geckoSession = GeckoSession()
         setupDelegates()
         geckoSession.open(runtime!!)
         geckoView.setSession(geckoSession)
@@ -132,7 +148,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun setupDelegates() {
-        // Navigation Delegate for handling links and deep link filtering
+        // Navigation Delegate
         geckoSession.navigationDelegate = object : GeckoSession.NavigationDelegate {
             override fun onLoadRequest(
                 session: GeckoSession,
@@ -148,7 +164,7 @@ class MainActivity : AppCompatActivity() {
                 }
 
                 if (host == "jules.google.com" || host?.endsWith(".jules.google.com") == true) {
-                    lastValidInternalUrl = request.uri
+                    updateLastValidInternalUrl(request.uri)
                 }
 
                 return GeckoResult.fromValue(AllowOrDeny.ALLOW)
@@ -159,14 +175,14 @@ class MainActivity : AppCompatActivity() {
                     val uri = Uri.parse(url)
                     val host = uri.host
                     if (host == "jules.google.com" || host?.endsWith(".jules.google.com") == true) {
-                        lastValidInternalUrl = url
+                        updateLastValidInternalUrl(url)
                     }
                 }
             }
         }
 
-        // Content Delegate for page load completion and script injections
-        geckoSession.contentDelegate = object : GeckoSession.ContentDelegate {
+        // Progress Delegate
+        geckoSession.progressDelegate = object : GeckoSession.ProgressDelegate {
             override fun onPageStop(session: GeckoSession, success: Boolean) {
                 if (success) {
                     injectMobileFriendlyScript()
@@ -176,7 +192,7 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
-        // Permission Delegate to auto-grant notifications for internal domain
+        // Permission Delegate: Grant desktop notifications for *.jules.google.com
         geckoSession.permissionDelegate = object : GeckoSession.PermissionDelegate {
             override fun onContentPermissionRequest(
                 session: GeckoSession,
@@ -186,21 +202,22 @@ class MainActivity : AppCompatActivity() {
                     val uri = Uri.parse(perm.uri)
                     val host = uri.host
                     if (host == "jules.google.com" || host?.endsWith(".jules.google.com") == true) {
-                        return GeckoResult.fromValue(GeckoSession.PermissionDelegate.PERMISSION_VALUE_ALLOW)
+                        return GeckoResult.fromValue(GeckoSession.PermissionDelegate.ContentPermission.VALUE_ALLOW)
                     }
                 }
-                return GeckoResult.fromValue(GeckoSession.PermissionDelegate.PERMISSION_VALUE_PROMPT)
+                return GeckoResult.fromValue(GeckoSession.PermissionDelegate.ContentPermission.VALUE_PROMPT)
             }
         }
 
-        // Prompt Delegate for file chooser / camera capture
+        // Prompt Delegate: File chooser / Camera capture
         geckoSession.promptDelegate = object : GeckoSession.PromptDelegate {
             override fun onFilePrompt(
                 session: GeckoSession,
                 prompt: GeckoSession.PromptDelegate.FilePrompt
-            ): GeckoResult<GeckoSession.PromptDelegate.FilePrompt.Result>? {
-                val result = GeckoResult<GeckoSession.PromptDelegate.FilePrompt.Result>()
-                promptFileCallback = result
+            ): GeckoResult<GeckoSession.PromptDelegate.PromptResponse>? {
+                val result = GeckoResult<GeckoSession.PromptDelegate.PromptResponse>()
+                pendingFilePrompt = prompt
+                promptResultCallback = result
 
                 var takePictureIntent: Intent? = Intent(MediaStore.ACTION_IMAGE_CAPTURE)
                 if (takePictureIntent?.resolveActivity(packageManager) != null) {
@@ -259,11 +276,16 @@ class MainActivity : AppCompatActivity() {
             } else if (data.scheme == "julesybean") {
                 urlToLoad = urlToLoad.replaceFirst("julesybean://", "https://")
             }
-            lastValidInternalUrl = urlToLoad
+            updateLastValidInternalUrl(urlToLoad)
             geckoSession.loadUri(urlToLoad)
             return true
         }
         return false
+    }
+
+    private fun updateLastValidInternalUrl(url: String) {
+        lastValidInternalUrl = url
+        saveCurrentInternalUrl()
     }
 
     override fun onPause() {
@@ -271,9 +293,15 @@ class MainActivity : AppCompatActivity() {
         saveCurrentInternalUrl()
     }
 
+    override fun onStop() {
+        super.onStop()
+        saveCurrentInternalUrl()
+    }
+
     private fun saveCurrentInternalUrl() {
-        if (lastValidInternalUrl != null) {
-            sharedPreferences.edit().putString(KEY_LAST_URL, lastValidInternalUrl).apply()
+        val urlToSave = lastValidInternalUrl
+        if (urlToSave != null) {
+            sharedPreferences.edit().putString(KEY_LAST_URL, urlToSave).apply()
         }
     }
 
@@ -309,7 +337,7 @@ class MainActivity : AppCompatActivity() {
 
     private fun scrollToBottomOfChat() {
         val js = """
-            (function() {
+            javascript:(function() {
                 var scrollContainers = document.querySelectorAll('$CSS_SELECTOR_CHAT_SCROLL');
                 if (scrollContainers.length > 0) {
                     for(var i=0; i<scrollContainers.length; i++) {
@@ -320,7 +348,7 @@ class MainActivity : AppCompatActivity() {
                 }
             })();
         """.trimIndent()
-        geckoSession.eval(js)
+        geckoSession.loadUri(js)
     }
 
     @SuppressLint("ClickableViewAccessibility")
@@ -340,14 +368,14 @@ class MainActivity : AppCompatActivity() {
 
     private fun openNavigationMenu() {
         val js = """
-            (function() {
+            javascript:(function() {
                 var menuBtn = document.querySelector("$CSS_SELECTOR_NAV_MENU");
                 if (menuBtn) {
                     menuBtn.click();
                 }
             })();
         """.trimIndent()
-        geckoSession.eval(js)
+        geckoSession.loadUri(js)
     }
 
     private fun isDarkModeEnabled(): Boolean {
@@ -358,7 +386,7 @@ class MainActivity : AppCompatActivity() {
     private fun injectDarkModeScript() {
         val isDark = isDarkModeEnabled()
         val js = """
-            (function() {
+            javascript:(function() {
                 if ($isDark) {
                     document.documentElement.classList.add('dark');
                     document.documentElement.setAttribute('data-theme', 'dark');
@@ -368,12 +396,12 @@ class MainActivity : AppCompatActivity() {
                 }
             })();
         """.trimIndent()
-        geckoSession.eval(js)
+        geckoSession.loadUri(js)
     }
 
     private fun injectMobileFriendlyScript() {
         val js = """
-            (function() {
+            javascript:(function() {
                 var style = document.createElement('style');
                 style.innerHTML = `
                     /* Force readable font size */
@@ -401,6 +429,6 @@ class MainActivity : AppCompatActivity() {
                 document.head.appendChild(style);
             })();
         """.trimIndent()
-        geckoSession.eval(js)
+        geckoSession.loadUri(js)
     }
 }
