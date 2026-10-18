@@ -7,7 +7,7 @@ This document defines the interface contracts, deep linking schemes, intent hand
 ## Overview
 
 * **Base Web URL**: `https://jules.google.com`
-* **Supported Protocols / Schemes**: `https://`, `http://`, `julesybean://`
+* **Supported Protocols / Schemes**: `https://`, `http://`, `julesybean://`, `jules://`
 * **Internal Target Domain Scope**: `jules.google.com` and all subdomains (`*.jules.google.com`)
 * **Application ID**: `com.julesybean.app`
 * **Target Android Version**: SDK 34 (Android 14) / Min SDK 24 (Android 7.0)
@@ -24,7 +24,7 @@ Julesybean operates as a native Android container wrapping `https://jules.google
 
 ### Security Boundaries & Open Redirect Prevention
 * **Host Filtering**: All incoming Intent URIs and WebView navigation requests are strictly validated against `jules.google.com` and `*.jules.google.com`.
-* **Scheme Normalization**: Insecure (`http://`) and custom (`julesybean://`) URIs are rewritten to `https://` natively before loading in the WebView.
+* **Scheme Normalization**: Insecure (`http://`) and custom (`julesybean://`, `jules://`) URIs are rewritten to `https://` natively before loading in the WebView.
 * **External Link Isolation**: Any external domain navigation attempt is intercepted and passed to the Android OS (`Intent.ACTION_VIEW`) to open in an external browser.
 * **FileProvider Permissions**: Camera file capture uses temporary read/write URI grants (`Intent.FLAG_GRANT_READ_URI_PERMISSION`, `Intent.FLAG_GRANT_WRITE_URI_PERMISSION`) via `androidx.core.content.FileProvider`.
 
@@ -100,13 +100,14 @@ Intercepts system-wide deep links matching internal domains and routes them into
 | `https://` | `jules.google.com`, `*.jules.google.com` | `/*` | Load directly in WebView |
 | `http://` | `jules.google.com`, `*.jules.google.com` | `/*` | Upgrade `http://` to `https://` |
 | `julesybean://` | `jules.google.com`, `*.jules.google.com` | `/*` | Replace `julesybean://` with `https://` |
+| `jules://` | `jules.google.com`, `*.jules.google.com` | `/*` | Replace `jules://` with `https://` |
 
 #### Request Data Schema
 ```json
 {
   "type": "object",
   "properties": {
-    "scheme": { "type": "string", "enum": ["http", "https", "julesybean"] },
+    "scheme": { "type": "string", "enum": ["http", "https", "julesybean", "jules"] },
     "host": { "type": "string", "pattern": "^([a-zA-Z0-9-]+\\.)*jules\\.google\\.com$" },
     "path": { "type": "string", "default": "/" },
     "query": { "type": "string", "optional": true }
