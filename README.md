@@ -4,7 +4,7 @@ Julesybean is an Android application that serves as a mobile-optimized WebView w
 
 ## Features
 
-* **Deep Link Handling & Security**: Intercepts `http://`, `https://`, and `julesybean://` links for `jules.google.com` (and its subdomains) and securely rewrites non-HTTPS schemes to `https://`.
+* **Deep Link Handling & Security**: Intercepts `http://`, `https://`, `jules://`, and `julesybean://` links for `jules.google.com` (and its subdomains) and securely rewrites non-HTTPS schemes to `https://`.
 * **Persistent Session & URL Navigation**: Saves the last visited internal URL in `SharedPreferences` upon app pause or closure and restores it on relaunch.
 * **Mobile Layout Injection**: Dynamically injects CSS into the loaded web application to hide bulky desktop sidebars (such as code panels), scale base text for readability, and maximize chat interface width.
 * **Native Dark Mode Synchronization**: Automatically detects the system's night mode setting and injects themes (`data-theme="dark"` or `"light"`) to keep the web view in sync with device appearance.
@@ -75,7 +75,7 @@ julesybean/
 
 ## Configuration
 
-* **Manifest Intent Filters**: Configured in `app/src/main/AndroidManifest.xml` to intercept schemes (`http`, `https`, `julesybean`) for hosts matching `jules.google.com` and `*.jules.google.com`.
+* **Manifest Intent Filters**: Configured in `app/src/main/AndroidManifest.xml` to intercept schemes (`http`, `https`, `jules`, `julesybean`) for hosts matching `jules.google.com` and `*.jules.google.com`.
 * **Shared Preferences**: Uses `JulesybeanPrefs` with the `last_url` key to store the most recent valid internal URL.
 * **DOM Selectors Configuration**: `MainActivity.kt` contains easily tweakable CSS selectors for injected web behaviors:
   * `CSS_SELECTOR_CHAT_CONTAINER`: `"main"`
@@ -108,7 +108,7 @@ To compile an optimized release APK:
 ### Testing Deep Links via ADB
 Once installed on a device or emulator, test deep link handling with ADB:
 ```bash
-adb shell am start -a android.intent.action.VIEW -d "julesybean://jules.google.com/chat/test" com.julesybean.app
+adb shell am start -a android.intent.action.VIEW -d "jules://jules.google.com/chat/test" com.julesybean.app
 ```
 
 ## Testing

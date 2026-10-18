@@ -98,7 +98,7 @@ class MainActivity : AppCompatActivity() {
                 if (url != null) {
                     val uri = Uri.parse(url)
                     val host = uri.host
-                    if (host == "jules.google.com" || host?.endsWith(".jules.google.com") == true) {
+                    if (UrlUtils.isInternalHost(host)) {
                         lastValidInternalUrl = url
                     }
                 }
@@ -118,7 +118,7 @@ class MainActivity : AppCompatActivity() {
             ): Boolean {
                 val uri = request?.url
                 val host = uri?.host
-                if (host != null && host != "jules.google.com" && !host.endsWith(".jules.google.com")) {
+                if (host != null && !UrlUtils.isAllowedHost(host)) {
                     val intent = Intent(Intent.ACTION_VIEW, uri)
                     startActivity(intent)
                     return true
@@ -198,13 +198,8 @@ class MainActivity : AppCompatActivity() {
     private fun handleIntent(intent: Intent?): Boolean {
         val data: Uri? = intent?.data
         val host = data?.host
-        if (data != null && (host == "jules.google.com" || host?.endsWith(".jules.google.com") == true)) {
-            var urlToLoad = data.toString()
-            if (data.scheme == "http") {
-                urlToLoad = urlToLoad.replaceFirst("http://", "https://")
-            } else if (data.scheme == "julesybean") {
-                urlToLoad = urlToLoad.replaceFirst("julesybean://", "https://")
-            }
+        if (data != null && UrlUtils.isInternalHost(host)) {
+            val urlToLoad = UrlUtils.normalizeUrl(data.toString())
             lastValidInternalUrl = urlToLoad
             webView.loadUrl(urlToLoad)
             return true
