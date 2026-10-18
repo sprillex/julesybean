@@ -20,4 +20,21 @@ object UrlUtils {
         if (host.isNullOrEmpty()) return false
         return host == "jules.google.com" || host.endsWith(".jules.google.com")
     }
+
+    /**
+     * Checks if the given host corresponds to a Google authentication domain (e.g., accounts.google.com).
+     */
+    fun isAuthHost(host: String?): Boolean {
+        if (host.isNullOrEmpty()) return false
+        return host == "accounts.google.com" ||
+                host.endsWith(".accounts.google.com") ||
+                host == "myaccount.google.com"
+    }
+
+    /**
+     * Checks if navigation to the host is allowed inside the WebView (internal host or authentication host).
+     */
+    fun isAllowedHost(host: String?): Boolean {
+        return isInternalHost(host) || isAuthHost(host)
+    }
 }

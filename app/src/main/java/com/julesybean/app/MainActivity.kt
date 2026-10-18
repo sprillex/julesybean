@@ -118,7 +118,7 @@ class MainActivity : AppCompatActivity() {
             ): Boolean {
                 val uri = request?.url
                 val host = uri?.host
-                if (host != null && !UrlUtils.isInternalHost(host)) {
+                if (host != null && !UrlUtils.isAllowedHost(host)) {
                     val intent = Intent(Intent.ACTION_VIEW, uri)
                     startActivity(intent)
                     return true

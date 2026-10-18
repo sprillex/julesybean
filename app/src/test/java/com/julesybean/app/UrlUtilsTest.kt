@@ -47,4 +47,30 @@ class UrlUtilsTest {
         assertFalse(UrlUtils.isInternalHost(null))
         assertFalse(UrlUtils.isInternalHost(""))
     }
+
+    @Test
+    fun testIsAuthHost() {
+        assertTrue(UrlUtils.isAuthHost("accounts.google.com"))
+        assertTrue(UrlUtils.isAuthHost("sub.accounts.google.com"))
+        assertTrue(UrlUtils.isAuthHost("myaccount.google.com"))
+
+        assertFalse(UrlUtils.isAuthHost("google.com"))
+        assertFalse(UrlUtils.isAuthHost("jules.google.com"))
+        assertFalse(UrlUtils.isAuthHost("example.com"))
+        assertFalse(UrlUtils.isAuthHost(null))
+        assertFalse(UrlUtils.isAuthHost(""))
+    }
+
+    @Test
+    fun testIsAllowedHost() {
+        assertTrue(UrlUtils.isAllowedHost("jules.google.com"))
+        assertTrue(UrlUtils.isAllowedHost("sub.jules.google.com"))
+        assertTrue(UrlUtils.isAllowedHost("accounts.google.com"))
+        assertTrue(UrlUtils.isAllowedHost("myaccount.google.com"))
+
+        assertFalse(UrlUtils.isAllowedHost("google.com"))
+        assertFalse(UrlUtils.isAllowedHost("example.com"))
+        assertFalse(UrlUtils.isAllowedHost(null))
+        assertFalse(UrlUtils.isAllowedHost(""))
+    }
 }

@@ -162,10 +162,11 @@ Guards internal web navigation and routes external links out of the application.
 
 #### Interception Logic Matrix
 
-| Target Host | Is Internal Scope? | Action Taken |
+| Target Host | Is Allowed Scope? | Action Taken |
 | :--- | :--- | :--- |
-| `jules.google.com` | Yes | Allow WebView to load URL (`return false`) |
-| `sub.jules.google.com` | Yes | Allow WebView to load URL (`return false`) |
+| `jules.google.com` | Yes (Internal) | Allow WebView to load URL (`return false`) |
+| `sub.jules.google.com` | Yes (Internal) | Allow WebView to load URL (`return false`) |
+| `accounts.google.com` | Yes (Auth) | Allow WebView to load URL (`return false`) |
 | `google.com` | No | Launch `Intent.ACTION_VIEW` system browser (`return true`) |
 | `example.com` | No | Launch `Intent.ACTION_VIEW` system browser (`return true`) |
 
