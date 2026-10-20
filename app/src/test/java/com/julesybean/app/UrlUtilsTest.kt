@@ -15,6 +15,20 @@ class UrlUtilsTest {
     }
 
     @Test
+    fun testNormalizeUrlWithJulesSchemeQueryParams() {
+        val input = "jules://jules.google.com/chat?q=test&mode=dark"
+        val expected = "https://jules.google.com/chat?q=test&mode=dark"
+        assertEquals(expected, UrlUtils.normalizeUrl(input))
+    }
+
+    @Test
+    fun testNormalizeUrlWithJulesSchemeSubdomain() {
+        val input = "jules://sub.jules.google.com/page"
+        val expected = "https://sub.jules.google.com/page"
+        assertEquals(expected, UrlUtils.normalizeUrl(input))
+    }
+
+    @Test
     fun testNormalizeUrlWithJulesybeanScheme() {
         val input = "julesybean://jules.google.com/chat/12345"
         val expected = "https://jules.google.com/chat/12345"
