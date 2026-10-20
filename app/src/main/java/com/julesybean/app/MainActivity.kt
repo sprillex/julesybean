@@ -197,12 +197,15 @@ class MainActivity : AppCompatActivity() {
 
     private fun handleIntent(intent: Intent?): Boolean {
         val data: Uri? = intent?.data
-        val host = data?.host
-        if (data != null && UrlUtils.isInternalHost(host)) {
+        if (data != null) {
             val urlToLoad = UrlUtils.normalizeUrl(data.toString())
-            lastValidInternalUrl = urlToLoad
-            webView.loadUrl(urlToLoad)
-            return true
+            val normalizedUri = Uri.parse(urlToLoad)
+            val host = normalizedUri.host
+            if (UrlUtils.isInternalHost(host)) {
+                lastValidInternalUrl = urlToLoad
+                webView.loadUrl(urlToLoad)
+                return true
+            }
         }
         return false
     }
