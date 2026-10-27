@@ -31,19 +31,15 @@
                 <category android:name="android.intent.category.BROWSABLE" />
                 <data android:scheme="http" />
                 <data android:scheme="https" />
-                <data android:scheme="julesybean" />
-                <data android:scheme="jules" />
                 <data android:host="jules.google.com" />
+                <data android:host="*.jules.google.com" />
             </intent-filter>
-            <intent-filter android:autoVerify="true">
+            <intent-filter>
                 <action android:name="android.intent.action.VIEW" />
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
-                <data android:scheme="http" />
-                <data android:scheme="https" />
-                <data android:scheme="julesybean" />
                 <data android:scheme="jules" />
-                <data android:host="*.jules.google.com" />
+                <data android:scheme="julesybean" />
             </intent-filter>
         </activity>
 
