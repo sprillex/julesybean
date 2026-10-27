@@ -1,3 +1,33 @@
 <resources>
     <string name="app_name">Julesybean</string>
+    <string name="prompt_manager">Prompt Manager</string>
+    <string name="search_prompts">Search prompts…</string>
+    <string name="sort_by">Sort by</string>
+    <string name="sort_alphabetical">Alphabetical</string>
+    <string name="sort_recently_used">Recently Used</string>
+    <string name="sort_date_created">Date Created</string>
+    <string name="new_prompt">New Prompt</string>
+    <string name="import_prompts">Import Prompts</string>
+    <string name="edit_prompt">Edit Prompt</string>
+    <string name="rename_prompt">Rename Prompt</string>
+    <string name="share_prompt">Share Prompt</string>
+    <string name="export_prompt">Export Prompt (.txt)</string>
+    <string name="delete_prompt">Delete Prompt</string>
+    <string name="prompt_title">Title</string>
+    <string name="prompt_content">Prompt Content</string>
+    <string name="save">Save</string>
+    <string name="cancel">Cancel</string>
+    <string name="delete">Delete</string>
+    <string name="delete_prompt_confirm_title">Delete Prompt?</string>
+    <string name="delete_prompt_confirm_body">Are you sure you want to delete \"%1$s\"? This action cannot be undone.</string>
+    <string name="discard_changes_title">Discard changes?</string>
+    <string name="discard_changes_body">You have unsaved changes. Are you sure you want to discard them?</string>
+    <string name="discard">Discard</string>
+    <string name="no_prompts_found">No prompts found</string>
+    <string name="no_prompts_empty">Tap + to create your first prompt or import from .txt files.</string>
+    <string name="copied_to_clipboard">Copied \"%1$s\" to clipboard</string>
+    <string name="imported_prompts_count">Imported %1$d prompt(s)</string>
+    <string name="export_success">Exported prompt to file</string>
+    <string name="error_title_required">Title cannot be blank</string>
+    <string name="error_content_required">Content cannot be blank</string>
 </resources>

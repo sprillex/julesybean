@@ -182,6 +182,12 @@ class MainActivity : AppCompatActivity() {
         setupSwipeGesture()
         setupBackButtonHandling()
 
+        val fabPromptManager = findViewById<com.google.android.material.floatingactionbutton.FloatingActionButton>(R.id.fabPromptManager)
+        fabPromptManager?.setOnClickListener {
+            val intent = Intent(this, PromptManagerActivity::class.java)
+            startActivity(intent)
+        }
+
         if (!handleIntent(intent)) {
             val lastUrl = sharedPreferences.getString(KEY_LAST_URL, "https://jules.google.com")
             lastValidInternalUrl = lastUrl
