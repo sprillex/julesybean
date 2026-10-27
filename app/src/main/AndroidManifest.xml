@@ -19,6 +19,12 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.Julesybean">
         <activity
+            android:name=".PromptManagerActivity"
+            android:exported="false"
+            android:label="@string/prompt_manager"
+            android:parentActivityName=".MainActivity" />
+
+        <activity
             android:name=".MainActivity"
             android:exported="true">
             <intent-filter>
